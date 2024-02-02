@@ -1,0 +1,4 @@
+docs que se ocupan
+
+
+- clock.c y clock.h: obtenidos de la carpeta spi en f4 de examples. Todos los archivos clock son iguales en los ejemplos
