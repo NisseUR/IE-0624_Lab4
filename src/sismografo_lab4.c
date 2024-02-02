@@ -16,17 +16,16 @@
 
 
 // Bibliotecas obtenidas de la carpeta example
-#include "adc.h"
+
 #include "clock.h"
 #include "console.h"
-#include "dac.h"
+
 #include "gfx.h"
-#include "gpio.h"
+
 #include "lcd-spi.h"
-#include "rcc.h"
+
 #include "sdram.h"
-#include "spi.h"
-#include "usart.h"
+
 
 
 // Librerias para el MCU STM32F4
