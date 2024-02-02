@@ -1,4 +1,6 @@
 docs que se ocupan
 
 
-- clock.c y clock.h: obtenidos de la carpeta spi en f4 de examples. Todos los archivos clock son iguales en los ejemplos
+- los archivos son obtenidos del example "lcd-serial"
+
+- se incluye de la carpeta f4 localizada en ../libopencm3-examples/libopencm3/include/libopencm3/stm32, los headers de spi.h, adc.h, rcc.h, gpio.h y usart.h
