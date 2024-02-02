@@ -4,3 +4,16 @@ docs que se ocupan
 - los archivos son obtenidos del example "lcd-serial"
 
 - se incluye de la carpeta f4 localizada en ../libopencm3-examples/libopencm3/include/libopencm3/stm32, los headers de spi.h, adc.h, rcc.h, gpio.h y usart.h
+
+
+librerias estandares de c 
+
+    stdio.h - Para operaciones de entrada y salida básicas. Aunque en sistemas embebidos las funciones como printf() pueden ser redirigidas para enviar datos a través de USART/USB para depuración o comunicación.
+
+    stdint.h - Define tipos de datos de ancho fijo, lo que es crucial para garantizar la portabilidad y la precisión de tu código al trabajar con hardware específico.
+
+    stdlib.h - Útil para operaciones generales como conversión de números a cadenas (itoa()), aunque en un entorno embebido, el uso de esta librería puede ser limitado debido a la gestión de la memoria dinámica.
+
+    string.h - Para manipular arrays de caracteres y strings, como copiar o comparar cadenas, que podrían ser útiles para preparar datos antes de enviarlos o después de recibirlos a través de USART/USB.
+
+    math.h - Si necesitas realizar cálculos matemáticos complejos, especialmente útil al procesar señales o datos del giroscopio.
