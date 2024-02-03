@@ -57,20 +57,20 @@
  */
 
 
-/* Funcion utilizada para la configuracion de SPI5 y GPIOs */
+/* Funcion utilizada para la configuracion del giroscopio */
 static void spi_setup(void)
 {
 
 	/* Setup GPIOC1 pin for spi mode l3gd20 select. */
-	gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO1);
+	gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO1); // Pin del CS
 	/* Start with spi communication disabled */
 	gpio_set(GPIOC, GPIO1);
 
 	/* Setup GPIO pins for AF5 for SPI1 signals. */
-	gpio_mode_setup(GPIOF, GPIO_MODE_AF, GPIO_PUPD_PULLDOWN, GPIO7 | GPIO8 | GPIO9);
+	gpio_mode_setup(GPIOF, GPIO_MODE_AF, GPIO_PUPD_PULLDOWN, GPIO7 | GPIO8 | GPIO9); // Pin del SCK - MOSI
 	gpio_set_af(GPIOF, GPIO_AF5, GPIO7 | GPIO8 | GPIO9);
 
-	//spi initialization;
+	//spi initialization for gyroscope;
 	spi_set_master_mode(SPI5);
 	spi_set_baudrate_prescaler(SPI5, SPI_CR1_BR_FPCLK_DIV_64);
 	spi_set_clock_polarity_0(SPI5);
@@ -93,13 +93,13 @@ static void usart_setup(void)
 
 	/* Setup GPIO pin GPIO_USART1_TX/GPIO9 on GPIO port A for transmit. */
 	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9);
-	gpio_set_af(GPIOA, GPIO_AF7, GPIO9);
+	gpio_set_af(GPIOA, GPIO_AF7, GPIO9); // Pin USART1 TX 
 
 	/* Setup UART parameters. */
 	usart_set_baudrate(USART1, 115200);
 	usart_set_databits(USART1, 8);
 	usart_set_stopbits(USART1, USART_STOPBITS_1);
-	usart_set_mode(USART1, USART_MODE_TX);
+	usart_set_mode(USART1, USART_MODE_TX_RX);
 	usart_set_parity(USART1, USART_PARITY_NONE);
 	usart_set_flow_control(USART1, USART_FLOWCONTROL_NONE);
 
@@ -131,16 +131,57 @@ rcc_periph_clock_enable(RCC_USART1);
 rcc_periph_clock_enable(RCC_ADC1);
 }
 
+
+static void configuracion_extras(void){
+
+    // Configuracion del boton, obtenida de ..libopencm3-examples/examples/stm32/f4/stm32f429i-discovery/button/button.c line 47
+	/* Set GPIO0 (in GPIO port A) to 'input open-drain'. */
+	gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO0);
+
+    // Configuracion del LED obtenida de ..libopencm3-examples/examples/stm32/f4/stm32f429i-discovery/fancyblink/fancyblink.c line 37
+    /* Set GPIO13-14 (in GPIO port G) to 'output push-pull'. */
+	gpio_mode_setup(GPIOG, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO13 | GPIO14);
+
+    // Configuracion de la batería
+    gpio_mode_setup (GPIOE, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO4);
+    gpio_clear(GPIOE, GPIO4);
+}
+
+/* Lógica de la función obtenida de .../libopencm3-examples/examples/stm32/f4/stm32f429i-discovery/adc-dac-printf/adc-dac-printf.c */
+static void adc_setup(void) //configuración para leer valores analógicos de dos pines específicos usando el ADC (Conversor Analógico a Digital)
+{
+	gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO3);
+	adc_power_off(ADC1);
+	adc_disable_scan_mode(ADC1);
+	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPR_SMP_3CYC);
+
+	adc_power_on(ADC1);
+
+}
+
+static uint16_t read_adc_naiive(uint8_t channel)
+{
+	uint8_t channel_array[16];
+	channel_array[0] = channel;
+	adc_set_regular_sequence(ADC1, 1, channel_array);
+	adc_start_conversion_regular(ADC1);
+	while (!adc_eoc(ADC1));
+	uint16_t reg16 = adc_read_regular(ADC1);
+	return reg16;
+}
+
+
 int main(void) {
 
 /* se inicializan las funciones */
 
-spi_setup();
+spi_setup(); 
 usart_setup();
 gpio_setup();
 clock_setup();
 sdram_init(); /* obtenido de sdram.c */
 lcd_spi_init(); /* obtenido de lcd-spi.c */
+adc_setup(); 
 
 }
 
