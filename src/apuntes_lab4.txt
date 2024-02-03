@@ -17,3 +17,8 @@ librerias estandares de c
     string.h - Para manipular arrays de caracteres y strings, como copiar o comparar cadenas, que podrían ser útiles para preparar datos antes de enviarlos o después de recibirlos a través de USART/USB.
 
     math.h - Si necesitas realizar cálculos matemáticos complejos, especialmente útil al procesar señales o datos del giroscopio.
+    
+  
+ el codigo se basa en la logica empleada en los siguientes archivos:
+- spi.c de la carpeta f3 -> spi
+- spi-mems.c de la carpeta f4 -> spi
