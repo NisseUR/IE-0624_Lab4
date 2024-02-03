@@ -18,81 +18,35 @@
 #include "lcd-spi.h"
 #include "gfx.h"
 
-/* Convert degrees to radians */
-#define d2r(d) ((d) * 6.2831853 / 360.0)
+// bibliotecas de libopencm3
+// #include <libopencm3/stm32/rcc.h>
+// #include <libopencm3/stm32/usart.h>
+// #include <libopencm3/stm32/spi.h>
+// #include <libopencm3/stm32/gpio.h>
 
-void delay(void);
+// Registros para la configuración específica del giroscopio, obtenidas de .../libopencm3-examples/examples/stm32/f3/stm32f3-discovery/spi/spi.c
+#define GYR_RNW			(1 << 7) /* Write when zero */
+#define GYR_MNS			(1 << 6) /* Multiple reads when 1 */
+#define GYR_WHO_AM_I		0x0F /* Registro Who Am I, para identificar el dispositivo.*/
+#define GYR_OUT_TEMP		0x26 /* contiene la lectura de temperatura del giroscopio*/
+#define GYR_STATUS_REG		0x27 /* para verificar si hay datos nuevos disponibles */
 
-void delay(void) {
-    for (int i = 0; i < 60000000; i++) {
-        __asm__("nop");
-    }
-}
+#define GYR_CTRL_REG1		0x20 /* para configurar el dispositivo (encender el giroscopio y habilitar los ejes) */
+#define GYR_CTRL_REG1_PD	(1 << 3) /* activa o desactiva el modo de encendido (Power Down) */
 
-/*
- * This is our example, the heavy lifing is actually in lcd-spi.c but
- * this drives that code.
- */
-int main(void)
-{
-	clock_setup();
-	console_setup(115200);
-	sdram_init();
-	lcd_spi_init();
-	console_puts("LCD Initialized\n");
-	console_puts("Should have a checker pattern, press any key to proceed\n");
-	msleep(2000);
+// habilitan los ejes X, Y y Z del giroscopio para la lectura.
+#define GYR_CTRL_REG1_XEN	(1 << 1) 
+#define GYR_CTRL_REG1_YEN	(1 << 0) 
+#define GYR_CTRL_REG1_ZEN	(1 << 2) 
 
-/*	(void) console_getc(1); */
-	gfx_init(lcd_draw_pixel, 240, 320);
-	gfx_fillScreen(LCD_GREY);
-	gfx_fillRoundRect(10, 10, 220, 220, 5, LCD_WHITE);
-	gfx_drawRoundRect(10, 10, 220, 220, 5, LCD_RED);
-	gfx_fillCircle(20, 250, 10, LCD_RED);
-	gfx_fillCircle(120, 250, 10, LCD_GREEN);
-	gfx_fillCircle(220, 250, 10, LCD_BLUE);
-	gfx_setTextSize(2);
-	gfx_setCursor(15, 25);
-	gfx_puts("STM32F4-DISCO");
-	gfx_setTextSize(1);
-	gfx_setCursor(15, 49);
-	gfx_puts("Simple example to put some");
-	gfx_setCursor(15, 60);
-	gfx_puts("stuff on the LCD screen.");
-	lcd_show_frame();
-	console_puts("Now it has a bit of structured graphics.\n");
-	console_puts("Press a key for some simple animation.\n");
-	msleep(2000);
-/*	(void) console_getc(1); */
-	gfx_setTextColor(LCD_YELLOW, LCD_BLACK);
-	gfx_setTextSize(3);
-	while (1) {
-        delay();
-		gfx_fillScreen(LCD_WHITE);
-        lcd_show_frame();
-        delay();
-        gfx_fillScreen(LCD_BLUE);
-        lcd_show_frame();
-        delay();
-        gfx_fillScreen(LCD_RED);
-        //delay();
-        /*
-		gfx_setCursor(15, 36);
-		gfx_puts("PLANETS!");
-		gfx_fillCircle(120, 160, 40, LCD_YELLOW);
-		gfx_drawCircle(120, 160, 55, LCD_GREY);
-		gfx_drawCircle(120, 160, 75, LCD_GREY);
-		gfx_drawCircle(120, 160, 100, LCD_GREY);
+#define GYR_CTRL_REG1_BW_SHIFT	4 /* Define cuántos bits se deben desplazar para establecer el ancho de banda en el registro de control 1*/
+#define GYR_CTRL_REG4		0x23 /* para configuraciones adicionales como la escala de sensibilidad */
+#define GYR_CTRL_REG4_FS_SHIFT	4 /* cuántos bits se deben desplazar para establecer la escala de sensibilidad completa */
 
-		gfx_fillCircle(120 + (sin(d2r(p1)) * 55),
-			       160 + (cos(d2r(p1)) * 55), 5, LCD_RED);
-		gfx_fillCircle(120 + (sin(d2r(p2)) * 75),
-			       160 + (cos(d2r(p2)) * 75), 10, LCD_WHITE);
-		gfx_fillCircle(120 + (sin(d2r(p3)) * 100),
-			       160 + (cos(d2r(p3)) * 100), 8, LCD_BLUE);
-		p1 = (p1 + 3) % 360;
-		p2 = (p2 + 2) % 360;
-		p3 = (p3 + 1) % 360;*/
-		lcd_show_frame();
-	}
-}
+// direcciones de los registros que contienen las partes baja y alta de las lecturas de los ejes X, Y y Z. 
+#define GYR_OUT_X_L		0x28 /* */
+#define GYR_OUT_X_H		0x29 /* */
+#define GYR_OUT_Y_L		0x2A /* */
+#define GYR_OUT_Y_H		0x2B /* */
+#define GYR_OUT_Z_L		0x2C /* */
+#define GYR_OUT_Z_H		0x2D /* */
