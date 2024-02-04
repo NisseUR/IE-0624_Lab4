@@ -10,6 +10,7 @@
 
 #include <stdint.h> // Define tipos de datos de ancho fijo.
 #include <math.h> // Para realizar cálculos matemáticos complejos.
+#include <stdio.h>
 
 // Bibliotecas obtenidas de la carpeta example
 #include "clock.h"
@@ -149,6 +150,7 @@ static void configuracion_extras(void){
 
 }
 
+
 /* //Dejar esto para el final,  primer verificar que el giroscopio sirve
 //Lógica de la función obtenida de .../libopencm3-examples/examples/stm32/f4/stm32f429i-discovery/adc-dac-printf/adc-dac-printf.c 
 static void adc_setup(void) //configuración para leer valores analógicos de dos pines específicos usando el ADC (Conversor Analógico a Digital)
@@ -176,18 +178,42 @@ static uint16_t read_adc_naiive(uint8_t channel)
 
 int main(void) {
 
+    clock_setup();
+	console_setup(115200);
+
 /* se inicializan las funciones */
 
     // lecturas ejes X Y Z del giroscopio
     int16_t eje_x, eje_y, eje_z;
+    char frase[50];
 
     spi_setup(); 
     usart_setup();
     gpio_setup();
-    clock_setup_G();
     sdram_init(); /* obtenido de sdram.c */
     lcd_spi_init(); /* obtenido de lcd-spi.c */
     //adc_setup(); // convertidor analogico a digital
+
+    /* Inicializacion de la pantalla */
+    gfx_init(lcd_draw_pixel, 240, 320);
+	gfx_fillScreen(LCD_WHITE);
+	gfx_setTextSize(2);
+	gfx_setCursor(15, 25);
+	gfx_puts("Sismografo");
+    // Eje X
+    gfx_setTextColor(LCD_BLACK, LCD_WHITE);
+	gfx_setCursor(15, 80);
+	gfx_puts("X: ");
+    // Eje Y
+    gfx_setTextColor(LCD_BLACK, LCD_WHITE);
+	gfx_setCursor(15, 120);
+	gfx_puts("Y: ");
+    // Eje Z
+    gfx_setTextColor(LCD_BLACK, LCD_WHITE);
+    gfx_setCursor(15, 160);
+	gfx_puts("Z: ");
+
+	lcd_show_frame();
 
     //Configuración inicial del giroscopio, basado en spic.c ubicado en f3: 
     gpio_clear(GPIOC, GPIO1);
@@ -214,6 +240,10 @@ int main(void) {
 
     while (1) {
 
+        gfx_fillScreen(LCD_WHITE);
+        gfx_setCursor(15, 25);
+	    gfx_puts("Sismografo");
+
         //Giroscopio eje X 
         gpio_clear(GPIOC, GPIO1);
         spi_send(SPI5, GYR_OUT_X_L | GYR_RNW);
@@ -228,7 +258,11 @@ int main(void) {
         spi_send(SPI5, 0);
         eje_x|= spi_read(SPI5) << 8;
         
-        // mostrar eje x en la pantalla 
+        // Mostrar eje x en la pantalla 
+        gfx_setTextColor(LCD_BLACK, LCD_WHITE);
+        sprintf(frase, "X: %d", eje_x);
+        gfx_setCursor(15, 80);
+        gfx_puts(frase);
 
         gpio_set(GPIOC, GPIO1);//lectura de datos termina 
 
@@ -246,7 +280,10 @@ int main(void) {
         spi_send(SPI5, 0);
         eje_y|= spi_read(SPI5) << 8;
         
-        // mostrar eje y en la pantalla 
+        // Mostrar eje y en la pantalla 
+        sprintf(frase, "Y: %d", eje_y);
+        gfx_setCursor(15, 120);
+        gfx_puts(frase);
 
         gpio_set(GPIOC, GPIO1);
 
@@ -264,7 +301,12 @@ int main(void) {
         spi_send(SPI5, 0);
         eje_z|= spi_read(SPI5) << 8;
         
-        // mostrar eje z en la pantalla 
+        // Mostrar eje z en la pantalla
+        sprintf(frase, "Z: %d", eje_z);
+        gfx_setCursor(15, 160);
+        gfx_puts(frase); 
+
+        lcd_show_frame();
     }
 }
 
