@@ -1,19 +1,19 @@
-#!/usr/bin/env python3
 import serial
 import paho.mqtt.client as mqtt
 import json
 import time
 
+# Conexión MQTT
+broker_address = "iot.eie.ucr.ac.cr"
+mqtt_port = 1883
+mqtt_topic = "v1/devices/me/telemetry"
+mqtt_username = "STM32_User"
+mqtt_password = "3r7m5422aw3lw0vk32su"
+
 # Se configura el puerto serie
 serial_port = "/dev/ttyACM0"  
 baudrate = 115200  # Velocidad de baudios
 
-# Conexión MQTT
-broker_address = ""
-mqtt_port = 1883
-mqtt_topic = "v1/devices/me/telemetry"
-mqtt_username = "STM32_User"
-mqtt_password = "your_mqtt_password_here"
 
 # Crear instancia del cliente MQTT
 mqtt_client = mqtt.Client("STM32_Serial_MQTT")
