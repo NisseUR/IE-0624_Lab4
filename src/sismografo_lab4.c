@@ -34,6 +34,14 @@
 #define GYR_CTRL_REG1		0x20 /* para configurar el dispositivo (encender el giroscopio y habilitar los ejes) */
 #define GYR_CTRL_REG1_PD	(1 << 3) /* activa o desactiva el modo de encendido (Power Down) */
 
+#define GYR_CTRL_REG2		0x20
+#define GYR_CTRL_REG2_HPM1	(0 << 5)
+#define GYR_CTRL_REG2_HPM2	(0 << 4)
+#define GYR_CTRL_REG2_HPCF0	(1 << 0)
+#define GYR_CTRL_REG2_HPCF1	(1 << 1)
+#define GYR_CTRL_REG2_HPCF2	(1 << 2)
+#define GYR_CTRL_REG2_HPCF3	(1 << 3)
+
 // habilitan los ejes X, Y y Z del giroscopio para la lectura.
 #define GYR_CTRL_REG1_XEN	(1 << 1) 
 #define GYR_CTRL_REG1_YEN	(1 << 0) 
@@ -142,12 +150,10 @@ static void configuracion_extras(void){
     /* Set GPIO13-14 (in GPIO port G) to 'output push-pull'. */
 	gpio_mode_setup(GPIOG, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO13 | GPIO14);
 
-    // Configuracion de la batería
-    gpio_mode_setup (GPIOE, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO4);
-    gpio_clear(GPIOE, GPIO4);
 }
 
-/* Lógica de la función obtenida de .../libopencm3-examples/examples/stm32/f4/stm32f429i-discovery/adc-dac-printf/adc-dac-printf.c */
+/* //Dejar esto para el final,  primer verificar que el giroscopio sirve
+//Lógica de la función obtenida de .../libopencm3-examples/examples/stm32/f4/stm32f429i-discovery/adc-dac-printf/adc-dac-printf.c 
 static void adc_setup(void) //configuración para leer valores analógicos de dos pines específicos usando el ADC (Conversor Analógico a Digital)
 {
 	gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO3);
@@ -169,20 +175,100 @@ static uint16_t read_adc_naiive(uint8_t channel)
 	uint16_t reg16 = adc_read_regular(ADC1);
 	return reg16;
 }
-
+*/
 
 int main(void) {
 
 /* se inicializan las funciones */
 
-spi_setup(); 
-usart_setup();
-gpio_setup();
-clock_setup();
-sdram_init(); /* obtenido de sdram.c */
-lcd_spi_init(); /* obtenido de lcd-spi.c */
-adc_setup(); 
+    // lecturas ejes X Y Z del giroscopio
+    int16_t eje_x, eje_y, eje_z;
 
+    spi_setup(); 
+    usart_setup();
+    gpio_setup();
+    clock_setup();
+    sdram_init(); /* obtenido de sdram.c */
+    lcd_spi_init(); /* obtenido de lcd-spi.c */
+    //adc_setup(); // convertidor analogico a digital
+
+    //Configuración inicial del giroscopio, basado en spic.c ubicado en f3: 
+    gpio_clear(GPIOC, GPIO1);
+    spi_send(SPI5, GYR_CTRL_REG1);
+    spi_read(SPI5);
+
+    // Se habilitan los ejes
+    spi_send(SPI5, GYR_CTRL_REG1_PD | GYR_CTRL_REG1_XEN | GYR_CTRL_REG1_YEN | GYR_CTRL_REG1_ZEN | (3 << GYR_CTRL_REG1_BW_SHIFT));
+    spi_read(SPI5);
+    gpio_set(GPIOC, GPIO1);
+
+    gpio_clear(GPIOC, GPIO1);
+   
+    spi_send(SPI5, GYR_CTRL_REG2);
+    spi_read(SPI5);
+    spi_send(SPI5, ~GYR_CTRL_REG2_HPM1 | GYR_CTRL_REG2_HPM2| GYR_CTRL_REG2_HPCF0 | GYR_CTRL_REG2_HPCF1| GYR_CTRL_REG2_HPCF2 | GYR_CTRL_REG2_HPCF3);
+    spi_read(SPI5);
+    gpio_set(GPIOC, GPIO1);
+    gpio_clear(GPIOC, GPIO1);
+    spi_send(SPI5, GYR_CTRL_REG4);
+    spi_read(SPI5);
+    spi_send(SPI5, (1 << GYR_CTRL_REG4_FS_SHIFT));
+    spi_read(SPI5);
+
+    while (1) {
+
+        //Giroscopio eje X 
+        gpio_clear(GPIOC, GPIO1);
+        spi_send(SPI5, GYR_OUT_X_L | GYR_RNW);
+        spi_read(SPI5);
+        spi_send(SPI5, 0);
+        eje_x =spi_read(SPI5);
+        gpio_set(GPIOC, GPIO1);
+
+        gpio_clear(GPIOC, GPIO1); //lectura de datos empieza 
+        spi_send(SPI5, GYR_OUT_X_H | GYR_RNW);
+        spi_read(SPI5);
+        spi_send(SPI5, 0);
+        eje_x|= spi_read(SPI5) << 8;
+        
+        // mostrar eje x en la pantalla 
+
+        gpio_set(GPIOC, GPIO1);//lectura de datos termina 
+
+        //Giroscopio eje Y 
+        gpio_clear(GPIOC, GPIO1);
+        spi_send(SPI5, GYR_OUT_Y_L | GYR_RNW);
+        spi_read(SPI5);
+        spi_send(SPI5, 0);
+        eje_y=spi_read(SPI5);
+        gpio_set(GPIOC, GPIO1);
+
+        gpio_clear(GPIOC, GPIO1);
+        spi_send(SPI5, GYR_OUT_Y_H | GYR_RNW);
+        spi_read(SPI5);
+        spi_send(SPI5, 0);
+        eje_y|= spi_read(SPI5) << 8;
+        
+        // mostrar eje y en la pantalla 
+
+        gpio_set(GPIOC, GPIO1);
+
+        //Giroscopio eje Z 
+        gpio_clear(GPIOC, GPIO1);
+        spi_send(SPI5, GYR_OUT_Z_L | GYR_RNW);
+        spi_read(SPI5);
+        spi_send(SPI5, 0);
+        eje_z=spi_read(SPI5);
+        gpio_set(GPIOC, GPIO1);
+
+        gpio_clear(GPIOC, GPIO1);
+        spi_send(SPI5, GYR_OUT_Z_H | GYR_RNW);
+        spi_read(SPI5);
+        spi_send(SPI5, 0);
+        eje_z|= spi_read(SPI5) << 8;
+        
+        // mostrar eje z en la pantalla 
+    }
 }
 
 /* falta funcion para configurar pantalla (mostrar texto) 
