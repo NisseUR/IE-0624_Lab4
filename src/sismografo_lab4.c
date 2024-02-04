@@ -19,10 +19,10 @@
 #include "gfx.h"
 
 // bibliotecas de libopencm3
-// #include <libopencm3/stm32/rcc.h>
-// #include <libopencm3/stm32/usart.h>
-// #include <libopencm3/stm32/spi.h>
-// #include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/usart.h>
+#include <libopencm3/stm32/spi.h>
+#include <libopencm3/stm32/gpio.h>
 
 // Registros para la configuración específica del giroscopio, obtenidas de .../libopencm3-examples/examples/stm32/f3/stm32f3-discovery/spi/spi.c
 #define GYR_RNW			(1 << 7) /* Write when zero */
@@ -85,12 +85,9 @@ static void spi_setup(void)
 	spi_set_clock_phase_0(SPI5);
 	spi_set_full_duplex_mode(SPI5);
 	spi_set_unidirectional_mode(SPI5); /* bidirectional but in 3-wire */
-	spi_set_data_size(SPI5, SPI_CR2_DS_8BIT);
 	spi_enable_software_slave_management(SPI5);
 	spi_send_msb_first(SPI5);
 	spi_set_nss_high(SPI5);
-	
-	spi_fifo_reception_threshold_8bit(SPI5);
 	SPI_I2SCFGR(SPI5) &= ~SPI_I2SCFGR_I2SMOD;
 	spi_enable(SPI5);
 }
@@ -123,7 +120,7 @@ static void gpio_setup(void)
     gpio_mode_setup(GPIOG, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO14);
 }
 
-static void clock_setup(void)
+static void clock_setup_G(void)
 {
 rcc_clock_setup_pll (&rcc_hse_8mhz_3v3 [RCC_CLOCK_3V3_84MHZ]);
 rcc_periph_clock_enable(RCC_SPI5);
@@ -187,7 +184,7 @@ int main(void) {
     spi_setup(); 
     usart_setup();
     gpio_setup();
-    clock_setup();
+    clock_setup_G();
     sdram_init(); /* obtenido de sdram.c */
     lcd_spi_init(); /* obtenido de lcd-spi.c */
     //adc_setup(); // convertidor analogico a digital
