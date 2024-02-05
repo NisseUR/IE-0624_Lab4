@@ -10,7 +10,7 @@
 
 #include <stdint.h> // Define tipos de datos de ancho fijo.
 #include <math.h> // Para realizar cálculos matemáticos complejos.
-#include <stdio.h>
+#include <stdio.h> // Para funcion sprintf()
 
 // Bibliotecas obtenidas de la carpeta example
 #include "clock.h"
@@ -24,6 +24,7 @@
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/stm32/spi.h>
 #include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/adc.h>
 
 // Registros para la configuración específica del giroscopio, obtenidas de .../libopencm3-examples/examples/stm32/f3/stm32f3-discovery/spi/spi.c
 #define GYR_RNW			(1 << 7) /* Write when zero */
@@ -32,8 +33,8 @@
 #define GYR_OUT_TEMP		0x26 /* contiene la lectura de temperatura del giroscopio*/
 #define GYR_STATUS_REG		0x27 /* para verificar si hay datos nuevos disponibles */
 
-#define GYR_CTRL_REG1		0x20 /* para configurar el dispositivo (encender el giroscopio y habilitar los ejes) */
-#define GYR_CTRL_REG1_PD	(1 << 3) /* activa o desactiva el modo de encendido (Power Down) */
+#define GYR_CTRL_REG1		0x20 /* Para configurar el dispositivo (encender el giroscopio y habilitar los ejes) */
+#define GYR_CTRL_REG1_PD	(1 << 3) /* Power Down = HIGH, en REGISTRO1 */
 
 #define GYR_CTRL_REG2		0x20
 #define GYR_CTRL_REG2_HPM1	(0 << 5)
@@ -59,6 +60,13 @@
 #define GYR_OUT_Y_H		0x2B /* */
 #define GYR_OUT_Z_L		0x2C /* */
 #define GYR_OUT_Z_H		0x2D /* */
+
+#define LED_DISCO_RED_PORT GPIOG
+#define LED_DISCO_RED_PIN GPIO14
+
+// Resistencias divisoras de voltage
+const float RESISTOR1 = 1000.0;
+const float RESISTOR2 = 636.0;
 
 
 /* Basada en la logica de .../libopencm3-examples/examples/stm32/f3/stm32f3-discovery/spi/spi.c
@@ -127,8 +135,8 @@ rcc_clock_setup_pll (&rcc_hse_8mhz_3v3 [RCC_CLOCK_3V3_84MHZ]);
 rcc_periph_clock_enable(RCC_SPI5);
 
 /* Habilitacion de los relojes de GPIOs*/
-rcc_periph_clock_enable (RCC_GPIOA);
-rcc_periph_clock_enable (RCC_GPIOB);
+rcc_periph_clock_enable (RCC_GPIOA); // USART1
+rcc_periph_clock_enable (RCC_GPIOB); 
 rcc_periph_clock_enable (RCC_GPIOC);
 rcc_periph_clock_enable (RCC_GPIOD);
 rcc_periph_clock_enable (RCC_GPIOE);
@@ -151,10 +159,14 @@ static void configuracion_extras(void){
 }
 
 
-/* //Dejar esto para el final,  primer verificar que el giroscopio sirve
-//Lógica de la función obtenida de .../libopencm3-examples/examples/stm32/f4/stm32f429i-discovery/adc-dac-printf/adc-dac-printf.c 
-static void adc_setup(void) //configuración para leer valores analógicos de dos pines específicos usando el ADC (Conversor Analógico a Digital)
+
+/* Lógica de la función obtenida de:
+ .../libopencm3-examples/examples/stm32/f4/stm32f429i-discovery/adc-dac-printf/adc-dac-printf.c */
+static void adc_setup(void)
 {
+    /* Configuración para leer valores analógicos de dos pines específicos usando 
+    el ADC (Conversor Analógico a Digital)*/
+
 	gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO3);
 	adc_power_off(ADC1);
 	adc_disable_scan_mode(ADC1);
@@ -164,6 +176,7 @@ static void adc_setup(void) //configuración para leer valores analógicos de do
 
 }
 
+// Funcion para leer voltaje bateria
 static uint16_t read_adc_naiive(uint8_t channel)
 {
 	uint8_t channel_array[16];
@@ -174,24 +187,24 @@ static uint16_t read_adc_naiive(uint8_t channel)
 	uint16_t reg16 = adc_read_regular(ADC1);
 	return reg16;
 }
-*/
+
 
 int main(void) {
 
     clock_setup();
-
     clock_setup_G();
 	console_setup(115200);
+    adc_setup();
+    spi_setup(); 
+    usart_setup();
+    gpio_setup();
 
-/* se inicializan las funciones */
+    /* se inicializan las funciones */
 
     // lecturas ejes X Y Z del giroscopio
     int16_t eje_x, eje_y, eje_z;
     char frase[50];
 
-    spi_setup(); 
-    usart_setup();
-    gpio_setup();
     sdram_init(); /* obtenido de sdram.c */
     lcd_spi_init(); /* obtenido de lcd-spi.c */
     //adc_setup(); // convertidor analogico a digital
@@ -240,7 +253,32 @@ int main(void) {
     spi_send(SPI5, (1 << GYR_CTRL_REG4_FS_SHIFT));
     spi_read(SPI5);
 
+    
+    /* red led for ticking */
+	gpio_mode_setup(LED_DISCO_RED_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
+	LED_DISCO_RED_PIN);
+
     while (1) {
+
+        // Chequear bateria
+        uint16_t input_adc0 = read_adc_naiive(0); // Se lee voltaje
+        
+        uint16_t voltaje_real = input_adc0*(RESISTOR1 + RESISTOR2)/RESISTOR1;
+
+        if(voltaje_real <= 7){
+            // LED on/off bateria baja
+		    gpio_toggle(LED_DISCO_RED_PORT, LED_DISCO_RED_PIN);
+            // Mostrar nivel bateria en pantalla
+            sprintf(frase, "Bateria baja: %d", voltaje_real);
+            gfx_setCursor(15, 200);
+            gfx_puts(frase); 
+        }else{
+            gpio_clear(LED_DISCO_RED_PORT, LED_DISCO_RED_PIN);
+            // Mostrar nivel bateria en pantalla
+            sprintf(frase, "Carga bateria: %d", voltaje_real);
+            gfx_setCursor(15, 200);
+            gfx_puts(frase); 
+        }
 
         gfx_fillScreen(LCD_WHITE);
         gfx_setCursor(15, 25);
@@ -308,10 +346,7 @@ int main(void) {
         gfx_setCursor(15, 160);
         gfx_puts(frase); 
 
+
         lcd_show_frame();
     }
 }
-
-/* falta funcion para configurar pantalla (mostrar texto) 
-*y otra funcion para leer el nivel de bateria  
-*/ 
