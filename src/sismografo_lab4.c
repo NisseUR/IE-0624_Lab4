@@ -125,7 +125,10 @@ static void usart_setup(void)
 static void gpio_setup(void)
 {
     gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO0);
+
+    /* Set GPIO13 (in GPIO port G) to 'output push-pull'. */
     gpio_mode_setup(GPIOG, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO13);
+
     gpio_mode_setup(GPIOG, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO14);
 }
 
@@ -145,16 +148,16 @@ rcc_periph_clock_enable(RCC_USART1);
 rcc_periph_clock_enable(RCC_ADC1);
 }
 
-
-static void configuracion_extras(void){
+// funcion para el boton 
+static void button_setup(void){
 
     // Configuracion del boton, obtenida de ..libopencm3-examples/examples/stm32/f4/stm32f429i-discovery/button/button.c line 47
-	/* Set GPIO0 (in GPIO port A) to 'input open-drain'. */
+	
+    /* Enable GPIOA clock. */
+
+    /* Set GPIO0 (in GPIO port A) to 'input open-drain'. */
 	gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO0);
 
-    // Configuracion del LED obtenida de ..libopencm3-examples/examples/stm32/f4/stm32f429i-discovery/fancyblink/fancyblink.c line 37
-    /* Set GPIO13-14 (in GPIO port G) to 'output push-pull'. */
-	gpio_mode_setup(GPIOG, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO13 | GPIO14);
 
 }
 
@@ -198,6 +201,7 @@ int main(void) {
     spi_setup(); 
     usart_setup();
     gpio_setup();
+    button_setup(); /* obtenido de button.c del directorio f4 en examples*/
 
     /* se inicializan las funciones */
 
@@ -348,5 +352,10 @@ int main(void) {
 
 
         lcd_show_frame();
+
+        // se agrega delay 
+        for (i = 0; i < 3000000; i++) {		/* Wait a bit. */
+			__asm__("nop");
+		}
     }
 }
