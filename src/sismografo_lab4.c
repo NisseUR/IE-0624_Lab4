@@ -493,6 +493,7 @@ int main(void) {
         lcd_show_frame();
 
         // se agrega delay, obtenido de usart.c de examples f4
+        int i;
         for (i = 0; i < 3000000; i++) {	/* Wait a bit. */
 			__asm__("NOP");
 		}
