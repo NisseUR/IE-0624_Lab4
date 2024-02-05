@@ -61,13 +61,16 @@
 #define GYR_OUT_Y_H		0x2B /* */
 #define GYR_OUT_Z_L		0x2C /* */
 #define GYR_OUT_Z_H		0x2D /* */
-
 #define LED_DISCO_RED_PORT GPIOG
 #define LED_DISCO_RED_PIN GPIO14
 
 // Resistencias divisoras de voltage
-const float RESISTOR1 = 1000.0;
-const float RESISTOR2 = 636.0;
+const float RESISTOR1 = 10000.0;
+const float RESISTOR2 = 10000.0;
+
+/* Declaracion de funciones */
+static void spi_setup(void);
+char console_getc_GR(int wait);
 
 
 /* Basada en la logica de .../libopencm3-examples/examples/stm32/f3/stm32f3-discovery/spi/spi.c
@@ -193,88 +196,21 @@ static uint16_t read_adc_naiive(uint8_t channel)
 }
 
 /* Funciones para imprimir caracteres en la consola, lógica obtenida de usart_console.c en el directorio f4 de examples*/
-/*
- * console_putc(char c)
- *
- * Send the character 'c' to the USART, wait for the USART
- * transmit buffer to be empty first.
- */
-void console_putc(char c)
-{
-	uint32_t	reg;
-	do {
-		reg = USART_SR(CONSOLE_UART);
-	} while ((reg & USART_SR_TXE) == 0);
-	USART_DR(CONSOLE_UART) = (uint16_t) c & 0xff;
-}
 
 /*
- * char = console_getc(int wait)
+ * char = console_getc_GR(int wait)
  *
  * Check the console for a character. If the wait flag is
  * non-zero. Continue checking until a character is received
  * otherwise return 0 if called and no character was available.
  */
-char console_getc(int wait)
+char console_getc_GR(int wait)
 {
 	uint32_t	reg;
 	do {
 		reg = USART_SR(CONSOLE_UART);
 	} while ((wait != 0) && ((reg & USART_SR_RXNE) == 0));
 	return (reg & USART_SR_RXNE) ? USART_DR(CONSOLE_UART) : '\000';
-}
-
-/*
- * void console_puts(char *s)
- *
- * Send a string to the console, one character at a time, return
- * after the last character, as indicated by a NUL character, is
- * reached.
- */
-void console_puts(char *s)
-{
-	while (*s != '\000') {
-		console_putc(*s);
-		/* Add in a carraige return, after sending line feed */
-		if (*s == '\n') {
-			console_putc('\r');
-		}
-		s++;
-	}
-}
-
-/*
- * int console_gets(char *s, int len)
- *
- * Wait for a string to be entered on the console, limited
- * support for editing characters (back space and delete)
- * end when a <CR> character is received.
- */
-int console_gets(char *s, int len)
-{
-	char *t = s;
-	char c;
-
-	*t = '\000';
-	/* read until a <CR> is received */
-	while ((c = console_getc(1)) != '\r') {
-		if ((c == '\010') || (c == '\127')) {
-			if (t > s) {
-				/* send ^H ^H to erase previous character */
-				console_puts("\010 \010");
-				t--;
-			}
-		} else {
-			*t = c;
-			console_putc(c);
-			if ((t - s) < len) {
-				t++;
-			}
-		}
-		/* update end of string with NUL */
-		*t = '\000';
-	}
-	return t - s;
 }
 
 static void my_usart_print_int(uint32_t usart, int32_t value) // obtenida de spi.c
@@ -379,26 +315,6 @@ int main(void) {
 
     while (1) {
 
-        // Chequear bateria
-        uint16_t input_adc0 = read_adc_naiive(0); // Se lee voltaje
-        
-        uint16_t voltaje_real = input_adc0*(RESISTOR1 + RESISTOR2)/RESISTOR1;
-
-        if(voltaje_real <= 7){
-            // LED on/off bateria baja
-		    gpio_toggle(LED_DISCO_RED_PORT, LED_DISCO_RED_PIN);
-            // Mostrar nivel bateria en pantalla
-            sprintf(frase, "Bateria baja: %d", voltaje_real);
-            gfx_setCursor(15, 200);
-            gfx_puts(frase); 
-        }else{
-            gpio_clear(LED_DISCO_RED_PORT, LED_DISCO_RED_PIN);
-            // Mostrar nivel bateria en pantalla
-            sprintf(frase, "Carga bateria: %d", voltaje_real);
-            gfx_setCursor(15, 200);
-            gfx_puts(frase); 
-        }
-
         gfx_fillScreen(LCD_WHITE);
         gfx_setCursor(15, 25);
 	    gfx_puts("Sismografo");
@@ -465,6 +381,27 @@ int main(void) {
         gfx_setCursor(15, 160);
         gfx_puts(frase); 
 
+        // Chequear bateria
+        uint16_t input_adc0 = read_adc_naiive(0); // Se lee voltaje
+
+        uint16_t voltaje_real = input_adc0*(RESISTOR1 + RESISTOR2)/RESISTOR1;
+
+        voltaje_real = 7.0;
+
+        if(voltaje_real <= 7){
+            // LED on/off bateria baja
+		    gpio_toggle(LED_DISCO_RED_PORT, LED_DISCO_RED_PIN);
+            // Mostrar nivel bateria en pantalla
+            sprintf(frase, "Bateria baja: %d V", voltaje_real);
+            gfx_setCursor(10, 210);
+            gfx_puts(frase);
+        }else if(voltaje_real > 7){
+            gpio_clear(LED_DISCO_RED_PORT, LED_DISCO_RED_PIN);
+            // Mostrar nivel bateria en pantalla
+            sprintf(frase, "Carga bateria: %d V", voltaje_real);
+            gfx_setCursor(10, 210);
+            gfx_puts(frase); 
+        }
 
         // Boton para habilitar la comunicacion USART
         // Verificación del estado del botón y actualización de la variable de habilitación
@@ -475,6 +412,7 @@ int main(void) {
         }
 
         if (usart_enable) {
+            gfx_setCursor(15, 280);
             gfx_puts("Encendido"); // Indica en la pantalla que la comunicación está habilitada
             gpio_toggle(GPIOG, GPIO13); // Cambia el estado del LED de comunicación
 
@@ -486,6 +424,7 @@ int main(void) {
             my_usart_print_int(USART1, eje_z);
             console_puts("\n");
         } else {
+            gfx_setCursor(15, 280);
             gfx_puts("Apagado"); // Indica en la pantalla que la comunicación está deshabilitada
             gpio_clear(GPIOG, GPIO13); // Apaga el LED de comunicación
         }
