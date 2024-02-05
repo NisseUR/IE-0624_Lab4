@@ -191,6 +191,119 @@ static uint16_t read_adc_naiive(uint8_t channel)
 	return reg16;
 }
 
+/* Funciones para imprimir caracteres en la consola, lógica obtenida de usart_console.c en el directorio f4 de examples*/
+/*
+ * console_putc(char c)
+ *
+ * Send the character 'c' to the USART, wait for the USART
+ * transmit buffer to be empty first.
+ */
+void console_putc(char c)
+{
+	uint32_t	reg;
+	do {
+		reg = USART_SR(CONSOLE_UART);
+	} while ((reg & USART_SR_TXE) == 0);
+	USART_DR(CONSOLE_UART) = (uint16_t) c & 0xff;
+}
+
+/*
+ * char = console_getc(int wait)
+ *
+ * Check the console for a character. If the wait flag is
+ * non-zero. Continue checking until a character is received
+ * otherwise return 0 if called and no character was available.
+ */
+char console_getc(int wait)
+{
+	uint32_t	reg;
+	do {
+		reg = USART_SR(CONSOLE_UART);
+	} while ((wait != 0) && ((reg & USART_SR_RXNE) == 0));
+	return (reg & USART_SR_RXNE) ? USART_DR(CONSOLE_UART) : '\000';
+}
+
+/*
+ * void console_puts(char *s)
+ *
+ * Send a string to the console, one character at a time, return
+ * after the last character, as indicated by a NUL character, is
+ * reached.
+ */
+void console_puts(char *s)
+{
+	while (*s != '\000') {
+		console_putc(*s);
+		/* Add in a carraige return, after sending line feed */
+		if (*s == '\n') {
+			console_putc('\r');
+		}
+		s++;
+	}
+}
+
+/*
+ * int console_gets(char *s, int len)
+ *
+ * Wait for a string to be entered on the console, limited
+ * support for editing characters (back space and delete)
+ * end when a <CR> character is received.
+ */
+int console_gets(char *s, int len)
+{
+	char *t = s;
+	char c;
+
+	*t = '\000';
+	/* read until a <CR> is received */
+	while ((c = console_getc(1)) != '\r') {
+		if ((c == '\010') || (c == '\127')) {
+			if (t > s) {
+				/* send ^H ^H to erase previous character */
+				console_puts("\010 \010");
+				t--;
+			}
+		} else {
+			*t = c;
+			console_putc(c);
+			if ((t - s) < len) {
+				t++;
+			}
+		}
+		/* update end of string with NUL */
+		*t = '\000';
+	}
+	return t - s;
+}
+
+static void my_usart_print_int(uint32_t usart, int32_t value) // obtenida de spi.c
+{
+	int8_t i;
+	int8_t nr_digits = 0;
+	char buffer[25];
+
+	if (value < 0) {
+		usart_send_blocking(usart, '-');
+		value = value * -1;
+	}
+
+	if (value == 0) {
+		usart_send_blocking(usart, '0');
+	}
+
+	while (value > 0) {
+		buffer[nr_digits++] = "0123456789"[value % 10];
+		value /= 10;
+	}
+
+	for (i = nr_digits-1; i >= 0; i--) {
+		usart_send_blocking(usart, buffer[i]);
+	}
+
+	usart_send_blocking(usart, '\r');
+	usart_send_blocking(usart, '\n');
+}
+
 
 int main(void) {
 
@@ -211,7 +324,6 @@ int main(void) {
 
     sdram_init(); /* obtenido de sdram.c */
     lcd_spi_init(); /* obtenido de lcd-spi.c */
-    //adc_setup(); // convertidor analogico a digital
 
     /* Inicializacion de la pantalla */
     gfx_init(lcd_draw_pixel, 240, 320);
@@ -234,7 +346,7 @@ int main(void) {
 
 	lcd_show_frame();
 
-    //Configuración inicial del giroscopio, basado en spic.c ubicado en f3: 
+    //Configuración inicial del giroscopio, basado en spic.c ubicado en el directorio f3: 
     gpio_clear(GPIOC, GPIO1);
     spi_send(SPI5, GYR_CTRL_REG1);
     spi_read(SPI5);
@@ -351,6 +463,29 @@ int main(void) {
         gfx_puts(frase); 
 
 
+        // Boton para habilitar la comunicacion USART
+        // Verificación del estado del botón y actualización de la variable de habilitación
+        bool botonPresionado = gpio_get(GPIOA, GPIO0); 
+        if (botonPresionado) {
+            usart_enable = !usart_enable; 
+        }
+
+        if (usart_enable) {
+            gfx_puts("Encendido"); // Indica en la pantalla que la comunicación está habilitada
+            gpio_toggle(GPIOG, GPIO13); // Cambia el estado del LED de comunicación
+
+            // Envío de los valores de los ejes al USART
+            my_usart_print_int(USART1, eje_x);
+            console_puts("\n");
+            my_usart_print_int(USART1, eje_y);
+            console_puts("\n");
+            my_usart_print_int(USART1, eje_z);
+            console_puts("\n");
+        } else {
+            gfx_puts("Apagado"); // Indica en la pantalla que la comunicación está deshabilitada
+            gpio_clear(GPIOG, GPIO13); // Apaga el LED de comunicación
+        }
+        
         lcd_show_frame();
 
         // se agrega delay, obtenido de usart.c de examples f4
