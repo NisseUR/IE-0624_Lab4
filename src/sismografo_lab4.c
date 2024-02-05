@@ -11,6 +11,7 @@
 #include <stdint.h> // Define tipos de datos de ancho fijo.
 #include <math.h> // Para realizar cálculos matemáticos complejos.
 #include <stdio.h> // Para funcion sprintf()
+#include <stdbool.h> // librería estándar booleana
 
 // Bibliotecas obtenidas de la carpeta example
 #include "clock.h"
@@ -322,6 +323,8 @@ int main(void) {
     int16_t eje_x, eje_y, eje_z;
     char frase[50];
 
+    int usart_enable = 0; //para la habilitacion USART
+
     sdram_init(); /* obtenido de sdram.c */
     lcd_spi_init(); /* obtenido de lcd-spi.c */
 
@@ -465,6 +468,7 @@ int main(void) {
 
         // Boton para habilitar la comunicacion USART
         // Verificación del estado del botón y actualización de la variable de habilitación
+
         bool botonPresionado = gpio_get(GPIOA, GPIO0); 
         if (botonPresionado) {
             usart_enable = !usart_enable; 
