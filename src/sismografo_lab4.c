@@ -179,6 +179,8 @@ static uint16_t read_adc_naiive(uint8_t channel)
 int main(void) {
 
     clock_setup();
+
+    clock_setup_G();
 	console_setup(115200);
 
 /* se inicializan las funciones */
