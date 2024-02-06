@@ -63,6 +63,8 @@
 #define GYR_OUT_Z_H		0x2D /* */
 #define LED_DISCO_RED_PORT GPIOG
 #define LED_DISCO_RED_PIN GPIO14
+#define LED_DISCO_GREEN_PORT GPIOG
+#define LED_DISCO_GREEN_PIN GPIO13
 
 // Resistencias divisoras de voltage
 const float RESISTOR1 = 10000.0;
@@ -312,6 +314,9 @@ int main(void) {
     /* red led for ticking */
 	gpio_mode_setup(LED_DISCO_RED_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
 	LED_DISCO_RED_PIN);
+    /* green led for ticking */
+	gpio_mode_setup(LED_DISCO_GREEN_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
+	LED_DISCO_GREEN_PIN);
 
     while (1) {
 
@@ -411,7 +416,7 @@ int main(void) {
             usart_enable = !usart_enable; 
         }
 
-        if (usart_enable) {
+        if(usart_enable){
             gfx_setCursor(15, 280);
             gfx_puts("Encendido"); // Indica en la pantalla que la comunicación está habilitada
             gpio_toggle(GPIOG, GPIO13); // Cambia el estado del LED de comunicación
@@ -423,7 +428,7 @@ int main(void) {
             console_puts("\n");
             my_usart_print_int(USART1, eje_z);
             console_puts("\n");
-        } else {
+        }else{
             gfx_setCursor(15, 280);
             gfx_puts("Apagado"); // Indica en la pantalla que la comunicación está deshabilitada
             gpio_clear(GPIOG, GPIO13); // Apaga el LED de comunicación
