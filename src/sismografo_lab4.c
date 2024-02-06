@@ -239,8 +239,8 @@ static void my_usart_print_int(uint32_t usart, int32_t value) // obtenida de spi
 		usart_send_blocking(usart, buffer[i]);
 	}
 
-	usart_send_blocking(usart, '\r');
-	usart_send_blocking(usart, '\n');
+	//usart_send_blocking(usart, '\r');
+	//usart_send_blocking(usart, '\n');
 }
 
 
