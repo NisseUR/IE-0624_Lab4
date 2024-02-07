@@ -1,0 +1,17 @@
+% Conclusiones y recomendaciones
+
+%% realizarse en función de lo descrito en la sección de análisis de datos
+
+Para finalizar, se logra trabajar con un nuevo microcontrolador, el STM32F429 Discovery, y para el funcionamiento de sus programas se hace uso de la biblioteca libopencm3. Con ayuda de los ejemplos proporcionados en el repositorio libopencm3-examples, se logra entender el código así como la correcta configuración de los pines de la placa para la habilitación de los periféricos. Es con base a estos ejemplos que se hace el programa para el sismógrafo. \\
+
+Se programa el botón de la placa para que cuando sea presionado se habilitación la comunicación serial, y a la vez por medio de la plataforma de IoT Thingsboard se logra la conexión del programa utilizando un script de python. Con esto, se logra monitorear y vizualizar los datos obtenidos del sismógrafo en la computadora en tiempo real. \\
+
+%Se hace uso de una batería, resistencias y protoboard, así como su cableado respectivo, para hacer una fuente de alimentación adecuada para encender el microcontrolador adecueadamente. Como se utiliza una batería de 9 V, se reduce la tensión a aproxidamante 5 V que corresponde al límite que soporta el microcontrolador utilizado y evitar daños en el dispositivo. \\
+
+Se recomienda estudiar y trabajar con los ejemplos proporcionados por la librería libopencm3 para tener un mejor entendimiento del funcionamiento de los programas para el microcontrolador. así como repasar las hojas de datos tanto del STM32F429 Discovery como del acelerómetro para asegurarse de que su conexión y habilitación de puertos sea la adecuada. \\
+
+Con los widgets utilizados en el dashboard de Thingsboard, se logra recrear un sismógrafo que detecta un movimiento sísmico, donde las líneas de la gráfica del widget se mantienen estables en un valor cuando la placa no se mueve, pero al esta detectar movimientos entonces los valores en los ejes va a cambiar recreando lo sucedido cuando hay un temblor. \\
+
+A través de la realización del laboratorio, surgen problemáticas como la configuración incorrecta del SPI o problemas con la comunicación serial, por lo que se destaca la importancia de una metodología sistemática para la depuración y solución de problemas en sistemas embebidos. 
+
+Con este laboratorio se inicia la implementación del Internet de las Cosas con la tecnología de los microcontroladores, donde se lograr conectar un sistema embebido, como lo es el STM32F429, con un servidor MQTT a través de la comunicación serial y un script de Python. Se demuestra el potencial de los microcontroladores modernos en aplicaciones de IoT. 

@@ -1,0 +1,141 @@
+%% LyX 2.0.0 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[11pt,spanish]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[letterpaper]{geometry}
+\geometry{verbose,tmargin=2cm,bmargin=2cm,lmargin=2cm,rmargin=2cm}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\usepackage{color}
+\usepackage[spanish]{babel}
+\addto\shorthandsspanish{\spanishdeactivate{~<>}}
+\usepackage{multicol}
+\usepackage{array}
+\usepackage{float}
+\usepackage{multirow}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage[unicode=true,pdfusetitle,
+ bookmarks=true,bookmarksnumbered=false,bookmarksopen=false,
+ breaklinks=false,pdfborder={0 0 1},backref=section,colorlinks=true]
+ {hyperref}
+\hypersetup{
+ urlcolor=blue,linkcolor=black,citecolor=black}
+\usepackage{amsfonts}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{bigstrut}
+\geometry{left=30mm,right=30mm,top=25mm,bottom=25mm}
+\usepackage{breakurl}
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+\usepackage{listings}
+\pagenumbering{arabic}
+\usepackage[table,xcdraw]{xcolor}
+\usepackage{pdfpages}
+
+\makeatletter
+
+
+\DeclareRobustCommand{\Colon}{{%
+  \ooalign{%
+    \hidewidth\raisebox{0.2ex}{/}\kern0.1em\hidewidth\cr
+    C\cr
+    \hidewidth\kern0.1em\raisebox{0.2ex}{/}\hidewidth\cr
+  }%
+}}
+
+%---------------------------Definición del environment ---------------------------
+\newcounter{resumen}
+\setcounter{resumen}{0}
+\def\theejemplo{\thechapter.\arabic{resumen}}
+\newenvironment{resumen}{	
+\begin{center}
+\begin{minipage}[t]{500 pt}
+\vspace{5mm}
+\emph{\textbf{Resumen}}
+\\[-2mm]
+\line(1,0){500}
+\\[-4.25 mm]
+\line(1,0){500}
+\\
+}{
+\normalsize
+\\[2mm]
+
+\\[-2mm]
+\line(1,0){500}
+\\[0.5cm]
+\end{minipage}
+\end{center}
+}
+
+\lhead{IE-0624: Laboratorio de Microcontroladores}
+\chead{}
+\rhead{Laboratorio \#4}	% Aquí va el numero de experimento, al igual que en el titulo
+\lfoot{Escuela de Ingeniería Eléctrica}
+\cfoot{\thepage}
+\rfoot{Universidad de Costa Rica}
+
+\title{Universidad de Costa Rica\\{\small Facultad de Ingeniería\\Escuela de Ingeniería Eléctrica\\IE-0624: Laboratorio de Microcontroladores \\\vspace*{0.55in}} Laboratorio \#4: STM32: GPIO, ADC, comunicaciones, Iot\vspace*{1.35in}}
+
+\author{Denisse Ugalde Rivera C07893\\ Alonso José Jiménez Anchía B63561\\ \\ \\ Profesor: MSc. Marco Villalta Fallas  \vspace*{2.5in}}
+
+\date{III-2023}
+
+
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}% No numerar la portada
+
+\newpage
+
+\tableofcontents
+\thispagestyle{empty}% No numerar la portada
+
+\newpage
+
+\listoffigures
+\thispagestyle{empty}% No numerar la portada
+
+\newpage
+\setcounter{page}{1}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Introducción}
+\input{secciones/1_introduccion}
+
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Nota teórica}
+\input{secciones/2_nota teorica}
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Desarrollo}
+\input{secciones/3_desarrollo}
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Conclusiones y Recomendaciones}
+\input{secciones/4_conclusiones}
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Bibliografía}
+\input{secciones/5_bibliografia}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Apéndice}
+\input{secciones/6_apendice}
+
+\end{document}
