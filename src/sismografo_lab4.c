@@ -180,6 +180,7 @@ static void adc_setup(void)
 	adc_power_off(ADC1);
 	adc_disable_scan_mode(ADC1);
 	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPR_SMP_3CYC);
+    //gpio_set(GPIOA, GPIO3);
 
 	adc_power_on(ADC1);
 
@@ -387,11 +388,11 @@ int main(void) {
         gfx_puts(frase); 
 
         // Chequear bateria
-        uint16_t input_adc0 = read_adc_naiive(0); // Se lee voltaje
+        uint16_t input_adc0 = read_adc_naiive(3); // Se lee voltaje
 
-        uint16_t voltaje_real = input_adc0*(RESISTOR1 + RESISTOR2)/RESISTOR1;
+        uint16_t voltaje_real  = (input_adc0 * 9.0f) / 4095.0f; 
 
-        voltaje_real = 7.0;
+        //voltaje_real = input_adc0*(RESISTOR1 + RESISTOR2)/RESISTOR1;
 
         if(voltaje_real <= 7){
             // LED on/off bateria baja
@@ -427,6 +428,9 @@ int main(void) {
             my_usart_print_int(USART1, eje_y);
             console_puts("\n");
             my_usart_print_int(USART1, eje_z);
+            console_puts("\n");
+            // Envío valor/nivel de la bateria al USART
+            my_usart_print_int(USART1, voltaje_real);
             console_puts("\n");
         }else{
             gfx_setCursor(15, 280);

@@ -48,21 +48,32 @@ comunicacion_serial = serial.Serial(serial_port, baudrate, timeout=1)
 
 while True:
     try:
-        if comunicacion_serial.read(1):
+        if comunicacion_serial.inWaiting():
 
-            print('X:')
             eje_x = comunicacion_serial.readline(16).decode('utf-8')
+            eje_y = comunicacion_serial.readline(16).decode('utf-8')
+            eje_z = comunicacion_serial.readline(16).decode('utf-8')
+            voltaje = comunicacion_serial.readline(16).decode('utf-8')
+ 
+            print('X:')
+            #eje_x = comunicacion_serial.readline(16).decode('utf-8')
             print(eje_x)
             print('Y:')
-            eje_y = comunicacion_serial.readline(16).decode('utf-8')
+            #eje_y = comunicacion_serial.readline(16).decode('utf-8')
             print(eje_y)
             print('Z:')
-            eje_z = comunicacion_serial.readline(16).decode('utf-8')
+            #eje_z = comunicacion_serial.readline(16).decode('utf-8')
             print(eje_z)
+            print('Bateria_voltaje:')
+            #voltaje = comunicacion_serial.readline(16).decode('utf-8')
+            print(voltaje)
 
             try:
                 # Construir payload MQTT
-                payload = json.dumps({"Eje X": int(eje_x), "Eje Y": int(eje_y), "Eje Z": int(eje_z)})
+                payload = json.dumps({"Eje X": int(eje_x),
+                                      "Eje Y": int(eje_y),
+                                      "Eje Z": int(eje_z),
+                                      "Nivel Bateria": int(voltaje)})
                 mqtt_client.publish(mqtt_topic, payload)
             except ValueError:
                 print("Error al procesar los datos recibidos.")
